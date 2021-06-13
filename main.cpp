@@ -2,6 +2,9 @@
 #include <sstream>
 #include <regex>
 #include <cmath>
+#include <thread>
+
+using std::literals::chrono_literals::operator ""s;
 
 std::string exec(const std::string s){
     auto file = popen(s.c_str(),"r");
@@ -40,7 +43,11 @@ int get_current_temp(){
 
 
 int main(){
-    for(int i=0;i<100;i++)
+    
+    for(int i=0;i<100;i++){
+        std::cout<<"temp is "<<get_current_temp()<<std::endl;
+        std::this_thread::sleep_for(1s);
+    }
     
     return 0;
 }
