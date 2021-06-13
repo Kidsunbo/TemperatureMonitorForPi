@@ -22,20 +22,22 @@ std::string exec(const std::string s){
 
 bool is_number(const std::string& s)
 {
-    return !s.empty() && std::find_if(s.begin(), 
-        s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+    char* end = nullptr;
+    double val = strtod(s.c_str(), &end);
+    return end != s.c_str() && *end == '\0' && val != HUGE_VAL;
 }
 
 int get_current_temp(){
     auto temp_str = exec("vcgencmd measure_temp");
-    std::cout<<temp_str<<std::endl;
-    std::regex pattern("temp=([0-9]+)'C");
+    temp_str = "temp=49.0'C";
+    std::regex pattern("temp=(.+)'C");
     std::match_results<std::string::iterator> match_result;
     std::regex_match(temp_str.begin(),temp_str.end(),match_result,pattern);
-    if(match_result.begin()==match_result.end()){
+    if(match_result.size()<2){
         return -1;
     }
-    auto temp_num_str = match_result.begin()->str();
+    auto temp_num_str = match_result[1].str();
+    std::cout<<temp_num_str<<std::endl;
     if(is_number(temp_num_str)){
         return std::round(std::stod(temp_num_str));
     }
