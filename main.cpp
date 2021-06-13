@@ -35,12 +35,14 @@ int get_current_temp(){
     std::match_results<std::string::iterator> match_result;
     std::regex_match(temp_str.begin(),temp_str.end(),match_result,pattern);
     if(match_result.size()<2){
+        std::cout<<"match failed"<<std::endl;
         return -1;
     }
     auto temp_num_str = match_result[1].str();
     if(is_number(temp_num_str)){
         return std::round(std::stod(temp_num_str));
     }
+            std::cout<<"failed"<<std::endl;
     return -1;
 }
 
