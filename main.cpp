@@ -28,6 +28,7 @@ bool is_number(const std::string& s)
 
 int get_current_temp(){
     auto temp_str = exec("vcgencmd measure_temp");
+    std::cout<<temp_str<<std::endl;
     std::regex pattern("temp=([0-9]+)'C");
     std::match_results<std::string::iterator> match_result;
     std::regex_match(temp_str.begin(),temp_str.end(),match_result,pattern);
@@ -48,6 +49,7 @@ int main(){
         std::cout<<"temp is "<<get_current_temp()<<std::endl;
         std::this_thread::sleep_for(1s);
     }
+
     
     return 0;
 }
