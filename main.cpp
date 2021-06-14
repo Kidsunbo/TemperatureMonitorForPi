@@ -3,12 +3,38 @@
 #include <regex>
 #include <cmath>
 #include <thread>
+#include <vector>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/component/event.hpp>
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 
+#include <chrono>
+
 using std::literals::chrono_literals::operator""s;
+
+std::vector<ftxui::Color> colors;
+
+void init_colors()
+{
+    colors.reserve(800);
+    for (int i = 66; i <= 245; i++)
+    {
+        colors.push_back(ftxui::Color(66, i, 245));
+    }
+    for (int i = 245; i >= 66; i--)
+    {
+        colors.push_back(ftxui::Color(66, 245, i));
+    }
+    for (int i = 66; i <= 245; i++)
+    {
+        colors.push_back(ftxui::Color(i, 245, 66));
+    }
+    for (int i = 245; i >= 66; i--)
+    {
+        colors.push_back(ftxui::Color(245, i, 66));
+    }
+}
 
 std::string exec(const std::string s)
 {
@@ -38,6 +64,9 @@ bool is_number(const std::string &s)
 
 int get_current_temp()
 {
+
+    return std::chrono::system_clock::now().time_since_epoch().count() / 100 % 100;
+
     auto temp_str = exec("vcgencmd measure_temp 2> /dev/null");
     std::regex pattern("temp=(.+)'C");
     std::match_results<std::string::iterator> match_result;
@@ -54,24 +83,13 @@ int get_current_temp()
     return -1;
 }
 
-ftxui::Color get_text_color(int temp)
+ftxui::Color get_text_color(int cur, int range)
 {
-    if (temp < 25)
-    {
-        return ftxui::Color(66, (245 - 66) / 25 * temp + 66, 245);
-    }
-    else if (temp < 50)
-    {
-        return ftxui::Color(66, 245, 66 + (255 - 66) / 25 * (49 - temp));
-    }
-    else if (temp < 75)
-    {
-        return ftxui::Color((245 - 66) / 25 * (temp - 49) + 66, 245, 66);
-    }
-    else
-    {
-        return ftxui::Color(245, 66 + (245 - 66) / 25 * (99 - temp), 66);
-    }
+   int index = colors.size()*(static_cast<double>(cur)/range);
+   if(index>=colors.size()){
+       index = colors.size()-1;
+   }
+   return colors[index];
 }
 
 ftxui::Color get_current_text_color()
@@ -81,41 +99,52 @@ ftxui::Color get_current_text_color()
     {
         ftxui::Color(ftxui::Color::Palette1::Default);
     }
-    return get_text_color(temp);
+    if(temp>=100){
+        temp==99;
+    }
+    return colors[temp/100.0];
 }
 
 int main()
 {
+    setenv("TERM", "xterm-256color", 1);
+    setenv("COLORTERM", "truecolor", 1);
+    init_colors();
+
     auto screen = ftxui::ScreenInteractive::TerminalOutput();
 
-    auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"°C");
     auto render = ftxui::Renderer([&]
-                                  { return ftxui::vbox({
-                                      text | ftxui::color(get_current_text_color()) | ftxui::center, 
-                                      ftxui::separator()}); });
+                                  {
+                                      auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"°C");
 
-    auto bar = ftxui::Renderer([&]{
-        ftxui::Elements elements;
-        auto temp = get_current_temp();
-        auto width = screen.dimx();
-        int should_width = std::round(temp/100.0*width);
-        for(int i=0;i<should_width;i++){
-            elements.push_back(ftxui::text(L" ")|ftxui::bgcolor(get_text_color(i)));
-        }
-        return ftxui::hbox(elements,ftxui::text(std::to_wstring(width)));
-    });
+                                      return ftxui::vbox({text | ftxui::color(get_current_text_color()) | ftxui::center,
+                                                          ftxui::separator()});
+                                  });
+
+    auto bar = ftxui::Renderer([&]
+                               {
+                                   ftxui::Elements elements;
+                                   auto temp = get_current_temp();
+                                   auto width = screen.dimx();
+                                   int should_width = std::round(temp / 100.0 * width);
+                                   for (int i = 0; i < should_width; i++)
+                                   {
+                                       elements.push_back(ftxui::text(L" ") | ftxui::bgcolor(get_text_color(i,width)));
+                                   }
+                                   return ftxui::hbox(elements, ftxui::text(std::to_wstring(width)));
+                               });
 
     std::thread update([&]()
                        {
                            for (;;)
                            {
                                using namespace std::chrono_literals;
-                               std::this_thread::sleep_for(0.5s);
+                               std::this_thread::sleep_for(0.1s);
                                screen.PostEvent(ftxui::Event::Custom);
                            }
                        });
 
-    auto components = ftxui::Container::Vertical({render,bar});
+    auto components = ftxui::Container::Vertical({render, bar});
 
     components = ftxui::CatchEvent(components, [&](ftxui::Event event)
                                    {
