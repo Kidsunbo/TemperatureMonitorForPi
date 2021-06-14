@@ -99,7 +99,7 @@ ftxui::Color get_current_text_color()
     if(temp>=100){
         temp==99;
     }
-    return colors[temp/100.0];
+    return colors[static_cast<int>(colors.size()*temp/100.0)];
 }
 
 int main()
