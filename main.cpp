@@ -54,6 +54,26 @@ int get_current_temp()
     return -1;
 }
 
+ftxui::Color get_text_color(int temp)
+{
+    if (temp < 25)
+    {
+        return ftxui::Color(66, (245 - 66) / 25 * temp + 66, 245);
+    }
+    else if (temp < 50)
+    {
+        return ftxui::Color(66, 245, 66 + (255 - 66) / 25 * (49 - temp));
+    }
+    else if (temp < 75)
+    {
+        return ftxui::Color((245 - 66) / 25 * (temp - 49) + 66, 245, 66);
+    }
+    else
+    {
+        return ftxui::Color(245, 66 + (245 - 66) / 25 * (99 - temp), 66);
+    }
+}
+
 ftxui::Color get_current_text_color()
 {
     auto temp = get_current_temp();
@@ -61,29 +81,53 @@ ftxui::Color get_current_text_color()
     {
         ftxui::Color(ftxui::Color::Palette1::Default);
     }
-    return ftxui::Color(155 + temp, 0, 255 - temp);
+    return get_text_color(temp);
 }
 
 int main()
 {
-
     auto screen = ftxui::ScreenInteractive::TerminalOutput();
 
     auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"'C");
     auto render = ftxui::Renderer([&]
-                                  { return ftxui::vbox({text | ftxui::color(get_current_text_color()) | ftxui::align_right}); });
+                                  { return ftxui::vbox({
+                                      text | ftxui::color(get_current_text_color()) | ftxui::center, 
+                                      ftxui::separator()}); });
 
-    auto components = ftxui::Container::Vertical({render});
+    auto bar = ftxui::Renderer([&]{
+        ftxui::Elements elements;
+        auto temp = get_current_temp();
+        auto width = screen.dimx();
+        int should_width = std::round(temp/100.0*width);
+        should_width = 50;
+        for(int i=0;i<should_width;i++){
+            elements.push_back(ftxui::text(L" ")|ftxui::bgcolor(get_text_color(i)));
+        }
+        return ftxui::hbox(elements);
+    });
+
+    std::thread update([&]()
+                       {
+                           for (;;)
+                           {
+                               using namespace std::chrono_literals;
+                               std::this_thread::sleep_for(0.05s);
+                               screen.PostEvent(ftxui::Event::Custom);
+                           }
+                       });
+
+    auto components = ftxui::Container::Vertical({render,bar});
 
     components = ftxui::CatchEvent(components, [&](ftxui::Event event)
                                    {
-                                       if (event.character() == L'q')
+                                       if (event == ftxui::Event::Character('q'))
                                        {
                                            screen.ExitLoopClosure()();
                                            return true;
                                        }
                                        return false;
                                    });
+    update.detach();
     screen.Loop(components);
 
     return 0;
