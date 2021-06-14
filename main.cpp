@@ -99,7 +99,6 @@ int main()
         auto temp = get_current_temp();
         auto width = screen.dimx();
         int should_width = std::round(temp/100.0*width);
-        should_width = 50;
         for(int i=0;i<should_width;i++){
             elements.push_back(ftxui::text(L" ")|ftxui::bgcolor(get_text_color(i)));
         }
