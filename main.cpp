@@ -88,7 +88,7 @@ int main()
 {
     auto screen = ftxui::ScreenInteractive::TerminalOutput();
 
-    auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"'C");
+    auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"°C");
     auto render = ftxui::Renderer([&]
                                   { return ftxui::vbox({
                                       text | ftxui::color(get_current_text_color()) | ftxui::center, 
