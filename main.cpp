@@ -64,9 +64,6 @@ bool is_number(const std::string &s)
 
 int get_current_temp()
 {
-
-    return std::chrono::system_clock::now().time_since_epoch().count() / 100 % 100;
-
     auto temp_str = exec("vcgencmd measure_temp 2> /dev/null");
     std::regex pattern("temp=(.+)'C");
     std::match_results<std::string::iterator> match_result;
@@ -131,7 +128,7 @@ int main()
                                    {
                                        elements.push_back(ftxui::text(L" ") | ftxui::bgcolor(get_text_color(i,width)));
                                    }
-                                   return ftxui::hbox(elements, ftxui::text(std::to_wstring(width)));
+                                   return ftxui::hbox(elements);
                                });
 
     std::thread update([&]()
