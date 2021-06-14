@@ -102,7 +102,7 @@ int main()
         for(int i=0;i<should_width;i++){
             elements.push_back(ftxui::text(L" ")|ftxui::bgcolor(get_text_color(i)));
         }
-        return ftxui::hbox(elements);
+        return ftxui::hbox(elements,ftxui::text(std::to_wstring(width)));
     });
 
     std::thread update([&]()
@@ -110,7 +110,7 @@ int main()
                            for (;;)
                            {
                                using namespace std::chrono_literals;
-                               std::this_thread::sleep_for(0.05s);
+                               std::this_thread::sleep_for(0.5s);
                                screen.PostEvent(ftxui::Event::Custom);
                            }
                        });
