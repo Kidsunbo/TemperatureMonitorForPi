@@ -9,8 +9,6 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 
-#include <chrono>
-
 using std::literals::chrono_literals::operator""s;
 
 std::vector<ftxui::Color> colors;
@@ -133,7 +131,7 @@ int main()
 
     std::thread update([&]()
                        {
-                           for (;;)
+                           while(true)
                            {
                                using namespace std::chrono_literals;
                                std::this_thread::sleep_for(0.1s);
