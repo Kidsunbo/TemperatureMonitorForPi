@@ -9,3 +9,5 @@ add_subdirectory(third/FTXUI)
 
 add_executable(temperature main.cpp)
 target_link_libraries(temperature PUBLIC ftxui::component)
+
+install(TARGETS temperature DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
