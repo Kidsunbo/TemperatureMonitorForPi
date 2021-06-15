@@ -93,7 +93,7 @@ ftxui::Color get_current_text_color()
     auto temp = get_current_temp();
     if (temp == -1)
     {
-        ftxui::Color(ftxui::Color::Palette1::Default);
+        return ftxui::Color(ftxui::Color::Palette1::Default);
     }
     if (temp >= 100)
     {
@@ -129,9 +129,12 @@ int main()
 
     std::thread update([&]()
                        {
+                           for(int i=0;i<10;i++){
+                               std::this_thread::sleep_for(0.01s);
+                               screen.PostEvent(ftxui::Event::Custom);
+                           }
                            while (true)
                            {
-                               using namespace std::chrono_literals;
                                std::this_thread::sleep_for(1s);
                                screen.PostEvent(ftxui::Event::Custom);
                            }
