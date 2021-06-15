@@ -134,7 +134,7 @@ int main()
                            while(true)
                            {
                                using namespace std::chrono_literals;
-                               std::this_thread::sleep_for(0.1s);
+                               std::this_thread::sleep_for(1s);
                                screen.PostEvent(ftxui::Event::Custom);
                            }
                        });
