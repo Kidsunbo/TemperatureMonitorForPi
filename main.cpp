@@ -80,11 +80,12 @@ int get_current_temp()
 
 ftxui::Color get_text_color(int cur, int range)
 {
-   int index = colors.size()*(static_cast<double>(cur)/range);
-   if(index>=colors.size()){
-       index = colors.size()-1;
-   }
-   return colors[index];
+    int index = colors.size() * (static_cast<double>(cur) / range);
+    if (index >= colors.size())
+    {
+        index = colors.size() - 1;
+    }
+    return colors[index];
 }
 
 ftxui::Color get_current_text_color()
@@ -94,10 +95,11 @@ ftxui::Color get_current_text_color()
     {
         ftxui::Color(ftxui::Color::Palette1::Default);
     }
-    if(temp>=100){
-        temp==99;
+    if (temp >= 100)
+    {
+        temp == 99;
     }
-    return colors[static_cast<int>(colors.size()*temp/100.0)];
+    return colors[static_cast<int>(colors.size() * temp / 100.0)];
 }
 
 int main()
@@ -111,27 +113,23 @@ int main()
     auto render = ftxui::Renderer([&]
                                   {
                                       auto text = ftxui::text(L"CPU温度:" + std::to_wstring(get_current_temp()) + L"°C");
+                                      ftxui::Elements elements;
+                                      auto temp = get_current_temp();
+                                      auto width = screen.dimx();
+                                      int should_width = std::round(temp / 100.0 * width);
+                                      for (int i = 0; i < should_width; i++)
+                                      {
+                                          elements.push_back(ftxui::text(L" ") | ftxui::bgcolor(get_text_color(i, width)));
+                                      }
 
                                       return ftxui::vbox({text | ftxui::color(get_current_text_color()) | ftxui::center,
-                                                          ftxui::separator()});
+                                                          ftxui::separator(),
+                                                          ftxui::hbox(elements)});
                                   });
-
-    auto bar = ftxui::Renderer([&]
-                               {
-                                   ftxui::Elements elements;
-                                   auto temp = get_current_temp();
-                                   auto width = screen.dimx();
-                                   int should_width = std::round(temp / 100.0 * width);
-                                   for (int i = 0; i < should_width; i++)
-                                   {
-                                       elements.push_back(ftxui::text(L" ") | ftxui::bgcolor(get_text_color(i,width)));
-                                   }
-                                   return ftxui::hbox(elements);
-                               });
 
     std::thread update([&]()
                        {
-                           while(true)
+                           while (true)
                            {
                                using namespace std::chrono_literals;
                                std::this_thread::sleep_for(1s);
@@ -139,7 +137,7 @@ int main()
                            }
                        });
 
-    auto components = ftxui::Container::Vertical({render, bar});
+    auto components = ftxui::Container::Vertical({render});
 
     components = ftxui::CatchEvent(components, [&](ftxui::Event event)
                                    {
